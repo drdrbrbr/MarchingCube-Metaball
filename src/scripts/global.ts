@@ -1,6 +1,6 @@
-import * as $ from './modules/Util';
-
 import { Tweakable } from './modules/Tweakable';
+import * as $ from './modules/Util';
+import type { EventManager } from './modules/Util';
 
 class MyObject extends Tweakable {
   public position: { x: number; y: number };
@@ -43,13 +43,15 @@ class MyObject extends Tweakable {
 
 class App {
   public myObject: MyObject;
+  public eventManager: EventManager;
   constructor() {
     this.myObject = new MyObject();
+    this.eventManager = new $.EventManager();
     this.init();
   }
   init() {
-    $.addEvent(document, 'DOMContentLoaded', this.loaded.bind(this));
-    $.addEvent(window, 'resize', this.resize.bind(this));
+    this.eventManager.add(document, 'DOMContentLoaded', this.loaded.bind(this));
+    this.eventManager.add(window, 'resize', this.resize.bind(this));
   }
 
   loaded() {

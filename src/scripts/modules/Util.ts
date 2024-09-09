@@ -34,40 +34,8 @@ export const hasClass = (target: HTMLElement, className: string) => {
   return target.classList.contains(className);
 }
 
-export const addEvent = (target: HTMLElement | Document | Window |string , type: string, callback: (e: Event) => void, capture = false) => {
-  if (typeof target === 'string') {
-    const targetEl = document.querySelectorAll(target);
-    targetEl.forEach((el: Element) => {
-      (el as HTMLElement).addEventListener(type, callback, capture);
-    });
-    return;
-  } else if (typeof target === 'object') {
-    target.addEventListener(type, callback, capture);
-    return;
-  } else {
-    console.log('target is not found');
-    return;
-  }
-}
-
-export const removeEvent = (target: NodeList | HTMLElement | Document | string | object, type: string, callback: () => void, capture = false) => {
-  if (target instanceof NodeList) {
-    target.forEach((el: Node) => {
-      (el as HTMLElement).removeEventListener(type, callback, capture);
-    });
-    return;
-  } else if (typeof target === 'string') {
-    document.querySelectorAll(target).forEach((el) => {
-      el.removeEventListener(type, callback, capture);
-    });
-    return;
-  } else if (target instanceof HTMLElement || target instanceof Document) {
-    target.removeEventListener(type, callback, capture);
-    return;
-  } else {
-    console.log('target is not found');
-    return;
-  }
+export const random = (max: number, min: number = 0) => {
+  return Math.random() * (max - min) + min;
 }
 
 export const randomInt = (max: number, min: number = 0) => {
@@ -102,4 +70,67 @@ export const randomPickArr = (arr: any[], num: number = -1) => {
   }
 
   return result;
+}
+
+export class TimeoutManager {
+  private static timeouts: number[] = [];
+
+  static setTimeout(callback: () => void, delay: number): number {
+    const id = window.setTimeout(() => {
+      TimeoutManager.clearTimeout(id);
+      callback();
+    }, delay);
+    TimeoutManager.timeouts.push(id);
+    return id;
+  }
+
+  static clearTimeout(id: number) {
+    const index = TimeoutManager.timeouts.indexOf(id);
+    if (index !== -1) {
+      TimeoutManager.timeouts.splice(index, 1);
+    }
+    window.clearTimeout(id);
+  }
+
+  static clearAllTimeouts() {
+    TimeoutManager.timeouts.forEach(id => window.clearTimeout(id));
+    TimeoutManager.timeouts = [];
+  }
+}
+
+type GenericEventListener<E extends Event> = (event: E) => void;
+
+interface EventRecord<E extends Event> {
+  target: EventTarget;
+  type: string;
+  listener: GenericEventListener<E>;
+}
+
+export class EventManager {
+  private events: EventRecord<Event>[] = [];
+
+  add<E extends Event>(target: EventTarget, type: string, listener: GenericEventListener<E>): void {
+    target.addEventListener(type, listener as EventListener);
+    this.events.push({ target, type, listener: listener as GenericEventListener<Event> });
+  }
+
+  remove<E extends Event>(target: EventTarget, type: string, listener: GenericEventListener<E>): void {
+    target.removeEventListener(type, listener as EventListener);
+    this.events = this.events.filter(event => event.target !== target || event.type !== type || event.listener !== listener);
+  }
+
+  removeAllForTarget(target: EventTarget): void {
+    this.events = this.events.filter(event => {
+      if (event.target === target) {
+        target.removeEventListener(event.type, event.listener as EventListener);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  removeAll(): void {
+    this.events.forEach(({ target, type, listener }) => target.removeEventListener(type, listener as EventListener));
+    this.events = [];
+  }
 }

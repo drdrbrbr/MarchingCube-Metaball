@@ -12,7 +12,7 @@
     "update": "npx -p npm-check-updates -c \"ncu -u && npm i\""
   },
   "dependencies": {
-    "@astrojs/check": "^0.7.0",
+    "@astrojs/check": "^0.9.3",
     "@swup/a11y-plugin": "^5.0.0",
     "@swup/debug-plugin": "^4.0.4",
     "@swup/fragment-plugin": "^1.1.1",
@@ -21,7 +21,7 @@
     "@swup/preload-plugin": "^3.2.10",
     "@swup/scroll-plugin": "^3.3.2",
     "alpinejs": "^3.14.1",
-    "astro": "^4.11.3",
+    "astro": "^4.15.4",
     "gsap": "^3.12.5",
     "sass": "^1.77.6",
     "swup": "^4.6.1",
