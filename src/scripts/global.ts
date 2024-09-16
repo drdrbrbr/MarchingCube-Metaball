@@ -1,7 +1,8 @@
 import { Tweakable } from './modules/Tweakable';
 import * as $ from './modules/Util';
 import type { EventManager } from './modules/Util';
-
+import * as THREE from 'three';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 class MyObject extends Tweakable {
   public position: { x: number; y: number };
   public size: number;
@@ -41,11 +42,79 @@ class MyObject extends Tweakable {
   }
 }
 
+class MyScene {
+  private scene: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private renderer: THREE.WebGLRenderer;
+  private devicePixelRatio: number;
+  private canvas: HTMLCanvasElement;
+  private controls!: TrackballControls;
+  private startTime: number;
+  constructor() {
+    this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+    });
+
+    this.devicePixelRatio = window.devicePixelRatio;
+    this.renderer.setPixelRatio(this.devicePixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.scene = new THREE.Scene();
+    this.startTime = new Date().getTime() + Math.random() * 40000; // start timeをランダムにする。
+    this.init();
+  }
+  init() {
+    this.addCamera();
+    this.addControls(this.camera, this.renderer);
+    this.addBox();
+    this.addLight();
+  }
+  addCamera() {
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    this.camera.position.z = 100;
+    this.camera.lookAt(0, 0, 0);
+  }
+  addControls(camera: THREE.Camera, renderer: THREE.WebGLRenderer) {
+    this.controls = new TrackballControls(camera, renderer.domElement);
+  }
+  addBox() {
+    const geometry = new THREE.BoxGeometry(10, 10, 10);
+    const material = new THREE.MeshBasicMaterial();
+    const cube = new THREE.Mesh(geometry, material);
+    this.scene.add(cube);
+  }
+  addLight() {
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(10, 10, 10);
+    this.scene.add(light);
+  }
+  render() {
+    const time = new Date().getTime() - this.startTime;
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+  animate() {
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
+  }
+  resize(w: number, h: number) {
+    const aspectRatio =  w / h;
+    this.renderer.setSize(w, h);
+
+    this.camera.aspect = aspectRatio;
+    this.camera.updateProjectionMatrix();
+
+    this.controls.handleResize();
+
+    this.render();
+  }
+}
+
 class App {
-  public myObject: MyObject;
+  public myScene: MyScene;
   public eventManager: EventManager;
   constructor() {
-    this.myObject = new MyObject();
+    this.myScene = new MyScene();
     this.eventManager = new $.EventManager();
     this.init();
   }
@@ -53,14 +122,19 @@ class App {
     this.eventManager.add(document, 'DOMContentLoaded', this.loaded.bind(this));
     this.eventManager.add(window, 'resize', this.resize.bind(this));
   }
+  animate() {
+    this.myScene.animate();
+  }
 
   loaded() {
     $.addClass(document.body, 'loaded');
-    console.log('loaded');
+    this.resize();
+    this.animate();
   }
   resize() {
     window.winW = window.innerWidth;
     window.winH = window.innerHeight;
+    this.myScene.resize(window.winW, window.winH);
   }
 }
 
@@ -73,5 +147,3 @@ declare global {
 }
 
 window.app = new App();
-
-

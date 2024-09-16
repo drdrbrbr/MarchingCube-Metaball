@@ -16,7 +16,8 @@
 
 html {
   font-family: DINNextLTPro-Regular, DNPShueiMGoStd-L, system-ui, -apple-system, BlinkMacSystemFont,'Open Sans', 'Helvetica Neue', sans-serif;
-
+  height: 100vh;
+  overflow: hidden;
   @supports (scrollbar-gutter: stable) {
     overflow-y: auto;
     scrollbar-gutter: stable;
@@ -50,6 +51,11 @@ body {
   }
 }
 
+main {
+  height: 100vh;
+  overflow: hidden;
+}
+
 
 /* The default transition for non-fragment visits */
 .is-changing .transition-main {
@@ -65,8 +71,4 @@ html.is-leaving .transition-main {
   opacity: 0;
 }
 
-#swup {
-  width: 100vw;
-  min-height: 100vh;
-}
 
