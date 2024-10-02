@@ -28,11 +28,13 @@
     "swup": "^4.6.1",
     "three": "^0.168.0",
     "tweakpane": "^4.0.4",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "vite-plugin-glslify": "^2.1.0"
   },
   "devDependencies": {
     "@tweakpane/core": "^2.0.4",
     "@types/alpinejs": "^3.13.10",
+    "lil-gui": "^0.19.2",
     "vite-plugin-qrcode": "^0.2.3"
   }
 }

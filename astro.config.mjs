@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import { qrcode } from 'vite-plugin-qrcode';
+// import glslify from "vite-plugin-glslify";
 
 // https://astro.build/config
 export default defineConfig({
