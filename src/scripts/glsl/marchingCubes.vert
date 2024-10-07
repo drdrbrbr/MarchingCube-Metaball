@@ -88,9 +88,9 @@ float opSmoothUnion(float d1, float d2, float k) {
 // 最終的な距離関数
 float getDistance(vec3 p) {
   // 適当に回転
-  float theta = mod(time * 0.001, PI2);
-  p = rotateVec3(p, theta, AXIS_Z);
-  p = rotateVec3(p, theta, AXIS_X);
+  // float theta = mod(time * 0.001, PI2);
+  // p = rotateVec3(p, theta, AXIS_Z);
+  // p = rotateVec3(p, theta, AXIS_X);
 
   float result = 0.0;
   float d;

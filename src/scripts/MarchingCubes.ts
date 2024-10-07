@@ -51,14 +51,14 @@ export class MarchingCubes extends Tweakable {
 
     this.numMarchingSegments = 80;  // セルの分割数
     this.margingSpaceSize = 128;     // マーチングキューブのスペースのサイズ
-    this.numSpheres = 8;            // メタボールの数
-    this.numInnerSphere = 1;
-    this.smoothUnionValue = 16;      // メタボールの結合の度合い
-    this.sphereInnerMoveRange = 2;
-    this.sphereOuterMoveRange = 38;
+    this.numSpheres = 6;            // メタボールの数
+    this.numInnerSphere = 2;
+    this.smoothUnionValue = 20;      // メタボールの結合の度合い
+    this.sphereInnerMoveRange = 25;
+    this.sphereOuterMoveRange = 40;
     this.sphereInnerRadius = 8.5;
-    this.sphereOuterRadius = 9.8;
-    this.sphereSpeed = 0.0015;
+    this.sphereOuterRadius = 12.5;
+    this.sphereSpeed = 0.0016;
     this.sphereColor = {r: 20, g: 140, b: 20};  // メタボールの色
     // geometry
     this.geometry = new THREE.BufferGeometry();
@@ -67,7 +67,7 @@ export class MarchingCubes extends Tweakable {
     console.log(this.effectValue)
     this.isWireframe = false;
 
-    this.allRotationSpeed = 0.004;
+    this.allRotationSpeed = 0.01;
 
     this.material = new THREE.RawShaderMaterial({
       // wireframe: true,
