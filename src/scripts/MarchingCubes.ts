@@ -67,7 +67,7 @@ export class MarchingCubes extends Tweakable {
     console.log(this.effectValue)
     this.isWireframe = false;
 
-    this.allRotationSpeed = 0.01;
+    this.allRotationSpeed = 0.002;
 
     this.material = new THREE.RawShaderMaterial({
       // wireframe: true,
