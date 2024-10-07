@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import vert from './glsl/marchingCubes.vert?raw'
 import frag from './glsl/marchingCubes.frag?raw'
-import GUI from 'lil-gui';
 import { Tweakable } from './modules/Tweakable';
 
 const TRI_TABLE = [
@@ -31,19 +30,20 @@ export class MarchingCubes extends Tweakable {
   private scene: THREE.Scene;
   private camera: THREE.Camera;
   private effectValue: number;
-  private gui: GUI;
   private isWireframe: boolean;
   private sphereInnerMoveRange: number;
   private sphereOuterMoveRange: number;
   private sphereInnerRadius: number;
   private sphereOuterRadius: number;
   private sphereSpeed: number;
+  private allRotationSpeed: number;
   constructor(renderer: THREE.WebGLRenderer, scene:THREE.Scene, camera: THREE.Camera) {
     super()
     console.log(this)
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
+    console.log (this.camera,this.renderer,this.scene)
     this.triTableTexture = new THREE.DataTexture(new Uint8Array(TRI_TABLE), 4096, 1, THREE.RedFormat);
     this.triTableTexture.minFilter = THREE.NearestFilter;
     this.triTableTexture.magFilter = THREE.NearestFilter;
@@ -51,21 +51,23 @@ export class MarchingCubes extends Tweakable {
 
     this.numMarchingSegments = 80;  // セルの分割数
     this.margingSpaceSize = 128;     // マーチングキューブのスペースのサイズ
-    this.numSpheres = 6;            // メタボールの数
+    this.numSpheres = 8;            // メタボールの数
     this.numInnerSphere = 1;
-    this.smoothUnionValue = 20;      // メタボールの結合の度合い
-    this.sphereInnerMoveRange = 4;
-    this.sphereOuterMoveRange = 40;
-    this.sphereInnerRadius = 3;
-    this.sphereOuterRadius = 4;
-    this.sphereSpeed = 0.002;
+    this.smoothUnionValue = 16;      // メタボールの結合の度合い
+    this.sphereInnerMoveRange = 2;
+    this.sphereOuterMoveRange = 38;
+    this.sphereInnerRadius = 8.5;
+    this.sphereOuterRadius = 9.8;
+    this.sphereSpeed = 0.0015;
     this.sphereColor = {r: 20, g: 140, b: 20};  // メタボールの色
-    this.gui = new GUI();
     // geometry
     this.geometry = new THREE.BufferGeometry();
 
     this.effectValue = 0;
+    console.log(this.effectValue)
     this.isWireframe = false;
+
+    this.allRotationSpeed = 0.004;
 
     this.material = new THREE.RawShaderMaterial({
       // wireframe: true,
@@ -103,23 +105,24 @@ export class MarchingCubes extends Tweakable {
   }
 
   initTweak() {
-    this.setupProp('effectValue', {min: 0, max: 1, step: 0.01})
-    this.setupProp('smoothUnionValue', {min: 0, max: 50, step: 0.01})
-    this.setupProp('numMarchingSegments', {min: 0, max: 100, step: 1}, this.updateMargingCubesSpace.bind(this))
-    this.setupProp('numSpheres', {min: 0, max: 30, step: 1}, this.updateNumSpheres.bind(this))
-    this.setupProp('sphereColor')
-    this.setupProp('isWireframe')
-    this.setupProp('sphereInnerMoveRange', {min: 0, max: 100, step: .1})
-    this.setupProp('sphereOuterMoveRange', {min: 0, max: 100, step: .1})
-    this.setupProp('sphereInnerRadius', {min: 0, max: 20, step: .1})
-    this.setupProp('sphereOuterRadius', {min: 0, max: 20, step: .1})
-    this.setupProp('sphereSpeed', {min: 0, max: 0.01, step: .0001})
-    this.setupProp('numInnerSphere', {min: 0, max: 10, step: 1})
+    // this.setupProp('effectValue', {min: 0, max: 1, step: 0.01})
+    this.setupProp('smoothUnionValue', {label: "結合度", min: 0, max: 50, step: 0.01})
+    this.setupProp('numMarchingSegments', {label: "分割数", min: 0, max: 100, step: 1}, this.updateMargingCubesSpace.bind(this))
+    this.setupProp('numSpheres', {label: "球の数", min: 0, max: 30, step: 1}, this.updateNumSpheres.bind(this))
+    this.setupProp('numInnerSphere', {label: "内球の数", min: 0, max: 10, step: 1})
+    this.setupProp('sphereInnerMoveRange', {label: "内球の移動範囲", min: 0, max: 100, step: .1})
+    this.setupProp('sphereOuterMoveRange', {label: "外球の移動範囲", min: 0, max: 100, step: .1})
+    this.setupProp('sphereInnerRadius', {label: "内球の半径", min: 0, max: 20, step: .1})
+    this.setupProp('sphereOuterRadius', {label: "外球の半径", min: 0, max: 20, step: .1})
+    this.setupProp('sphereSpeed', {label: "球の速度", min: 0, max: 0.01, step: .0001})
+    this.setupProp('allRotationSpeed', {label: "全体の回転速度", min: 0, max: 0.01, step: .0001})
+    this.setupProp('sphereColor', {label: "球の色"})
+    this.setupProp('isWireframe', {label: "ワイヤーON"})
   }
   
   change() {
     super.change()
-    this.material.uniforms.effectValue.value = this.effectValue;
+    // this.material.uniforms.effectValue.value = this.effectValue;
     this.material.uniforms.smoothUnionValue.value = this.smoothUnionValue;
     this.material.uniforms.sphereColor.value = new THREE.Color(this.sphereColor.r / 255, this.sphereColor.g / 255, this.sphereColor.b / 255);
     this.material.wireframe = this.isWireframe
@@ -177,7 +180,7 @@ export class MarchingCubes extends Tweakable {
   }
 
   update(time: number) {
-    this.mesh.rotation.z += 0.004;
+    this.mesh.rotation.z += this.allRotationSpeed;
     this.material.uniforms.time.value = time/3;
 
     // // メッシュの位置とスケールを調整

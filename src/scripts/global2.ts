@@ -64,11 +64,9 @@ class MyScene extends Tweakable{
   private maxblur: number = 0.01;
   private debugCubes: THREE.Mesh[] = [];
   private debugCubeFlg: boolean = false;
+  private isStop: boolean = false;
   constructor() {
     super();
-    this.pane.containerElem_.style.top = 'unset';
-    this.pane.containerElem_.style.bottom = '0px';
-    this.pane.containerElem_.style.display = 'none';
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -85,6 +83,7 @@ class MyScene extends Tweakable{
     this.init();
     this.marchingCubes = new MarchingCubes(this.renderer, this.scene, this.camera);
     
+    this.initSetTweakable();
     
   }
   init() {
@@ -93,15 +92,21 @@ class MyScene extends Tweakable{
     
     this.addControls(this.camera, this.renderer);
     // this.addLight();  // この行を追加
-    // this.addDebugCubes();
+    this.addDebugCubes();
     this.addLight();
     // this.addPostEffect();
   }
+  initSetTweakable() {
+    this.pane = this.marchingCubes.pane
+    this.folder = this.marchingCubes.folder
+    this.setupProp('debugCubeFlg', {type: 'boolean',label: "グリッドキューブ"});
+    this.setupProp('isStop', {type: 'boolean', label: "停止"});
+  }
   change() {
     super.change()
-    this.bokehPass.uniforms['focus'].value = this.focus;
-    this.bokehPass.uniforms['aperture'].value = this.aperture;
-    this.bokehPass.uniforms['maxblur'].value = this.maxblur;
+    // this.bokehPass.uniforms['focus'].value = this.focus;
+    // this.bokehPass.uniforms['aperture'].value = this.aperture;
+    // this.bokehPass.uniforms['maxblur'].value = this.maxblur;
 
     this.debugCubes.forEach((cube) => {
       cube.visible = this.debugCubeFlg;
@@ -115,7 +120,7 @@ class MyScene extends Tweakable{
       for (let j = 0; j < cubeRowNum; j++) {
         for (let k = 0; k < cubeDepthNum; k++) {
           const cube = new THREE.Mesh(geometry, material);
-          cube.scale.set(10,10,10);
+          cube.scale.set(5,5,5);
           cube.position.set(i * 200 - 1000, j * 200 - 1000, k * 200 - 1000);
           this.scene.add(cube);
           this.debugCubes.push(cube);
@@ -151,7 +156,7 @@ class MyScene extends Tweakable{
     console.log(this.bokehPass)
     this.setupProp('focus', {min: 0, max: 2000});
     this.setupProp('aperture', {min: 0, max: .010000,
-      format: (v) => v.toFixed(4),
+      format: (v: number) => v.toFixed(4),
     });
     this.setupProp('maxblur', {min: 0, max: 0.02});
     
@@ -177,6 +182,7 @@ class MyScene extends Tweakable{
     
   }
   render() {
+    if(this.isStop) return;
     const time = new Date().getTime() - this.startTime;
     this.controls.update();
     this.marchingCubes.update(time);

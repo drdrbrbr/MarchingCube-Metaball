@@ -6,7 +6,7 @@ type TweakableProperty = {
 
 export class Tweakable {
   pane: Pane;
-  private folder: FolderApi;
+  folder: FolderApi;
   
   constructor() {
     this.pane = new Pane();
