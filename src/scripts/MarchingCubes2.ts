@@ -1,14 +1,16 @@
 import { MarchingCubes } from 'three/addons/objects/MarchingCubes.js';
 import { SimplexNoise } from "three/addons/math/SimplexNoise.js";
+import { Tweakable } from './modules/Tweakable';
 import * as THREE from 'three';
 
-export class MarchingCubes2 {
+export class MarchingCubes2 extends Tweakable {
   public mesh: MarchingCubes;
   private resolution: number;
   private materials: any;
   private numBlobs: number;
   private noise: SimplexNoise;
   constructor() {
+    super();
     this.resolution = 50;
     this.materials = this.generateMaterials();
     this.mesh = new MarchingCubes(this.resolution, this.materials['basic']);
@@ -16,13 +18,15 @@ export class MarchingCubes2 {
     this.mesh.scale.set( 500, 500, 500 ); // individual setting
     this.mesh.enableUvs = false;
     this.mesh.enableColors = false;
-    this.mesh.isolation = 50;
+    this.mesh.isolation = 39;
 
     this.noise = new SimplexNoise();
 
     this.numBlobs = 5;
 
     this.init();
+    console.log(this.mesh);
+
   }
   init() {
     
@@ -65,17 +69,21 @@ export class MarchingCubes2 {
 
     object.reset(); // Delete marching cubes
   
-    const subtract = 12;
+    const subtract = 50;
     const strength = 1.2 / ( ( Math.sqrt( numblobs ) - 1 ) / 4 + 1 );
-  
-    for ( let i = 0; i < numblobs; i ++ ) {
-      // Postion Animation
-      const ballx = 0.5 + this.noise.noise( i * .4 + time*0.2, i * .4 + time*0.2 ) * 0.2;
-      const ballz = 0.5 + this.noise.noise( i * .2 + time*0.2, i * .2 + time*0.2 ) * 0.4;
-      const bally = 0.5 + this.noise.noise( i * .2 + time*0.2, i * .2 + time*0.2 ) * 0.2;
-  
-      object.addBall( ballx, bally, ballz, strength, subtract );
-    }
+    object.addBall( 0.5, 0.5, 0.5, 6, 40 );
+    object.addBall( 0.15, 0.5, 0.5, 2, 20 );
+    object.addBall( 0.85, 0.5, 0.5, 2, 20 );
+
+
+    // for ( let i = 0; i < numblobs; i ++ ) {
+    //   // Postion Animation
+    //   const ballx = 0.5*Math.sin(time + i) + 0.5; 
+    //   const ballz = 0.5;
+    //   const bally = 0.5 + this.noise.noise( i * .2 + time*0.2, i * .2 + time*0.2 ) * 0.2;
+    //   console.log(ballx, bally, ballz);
+    //   object.addBall( ballx, bally, ballz, strength, subtract );
+    // }
   
     object.update();
   }

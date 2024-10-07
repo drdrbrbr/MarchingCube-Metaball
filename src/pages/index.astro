@@ -2,8 +2,12 @@
 import Page from "@/layouts/Page.astro";
 ---
 
-<Page title="TOP" pageClass="index">
+<Page title="TOP" pageScript="global">
   <div class="wrap">
     <canvas id="canvas"></canvas>
   </div>
 </Page>
+
+<script>
+  import "@/scripts/global2.ts";
+</script>

@@ -3,10 +3,10 @@ import * as $ from './modules/Util';
 import type { EventManager } from './modules/Util';
 import * as THREE from 'three';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { MarchingCubes2 } from './MarchingCubes2';
+import { MarchingCubes } from './MarchingCubes';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { BokehPass, type BokehPassParamters } from 'three/addons/postprocessing/BokehPass.js';
 
 class MyObject extends Tweakable {
   public position: { x: number; y: number };
@@ -47,7 +47,7 @@ class MyObject extends Tweakable {
   }
 }
 
-class MyScene {
+class MyScene extends Tweakable{
   private scene: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
@@ -55,9 +55,20 @@ class MyScene {
   private canvas: HTMLCanvasElement;
   private controls!: TrackballControls;
   private startTime: number;
-  private marchingCubes2: MarchingCubes2;
+  private marchingCubes: MarchingCubes;
   private effect!: EffectComposer;
+  private bokehPass!: BokehPass;
+  private bokehPassParams!: BokehPassParamters;
+  private focus: number = 100;
+  private aperture: number = 0.005;
+  private maxblur: number = 0.01;
+  private debugCubes: THREE.Mesh[] = [];
+  private debugCubeFlg: boolean = false;
   constructor() {
+    super();
+    this.pane.containerElem_.style.top = 'unset';
+    this.pane.containerElem_.style.bottom = '0px';
+    this.pane.containerElem_.style.display = 'none';
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement;
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -70,34 +81,85 @@ class MyScene {
 
     this.scene = new THREE.Scene();
     this.startTime = new Date().getTime() + Math.random() * 40000; // start timeをランダムにする。
-    this.init();
 
-    this.marchingCubes2 = new MarchingCubes2();
-    this.scene.add(this.marchingCubes2.mesh);
+    this.init();
+    this.marchingCubes = new MarchingCubes(this.renderer, this.scene, this.camera);
+    
+    
   }
   init() {
     this.addCamera();
+    console.log(this.bokehPassParams)
+    
     this.addControls(this.camera, this.renderer);
     // this.addLight();  // この行を追加
+    // this.addDebugCubes();
     this.addLight();
-    this.addPostEffect();
+    // this.addPostEffect();
+  }
+  change() {
+    super.change()
+    this.bokehPass.uniforms['focus'].value = this.focus;
+    this.bokehPass.uniforms['aperture'].value = this.aperture;
+    this.bokehPass.uniforms['maxblur'].value = this.maxblur;
+
+    this.debugCubes.forEach((cube) => {
+      cube.visible = this.debugCubeFlg;
+    });
+  }
+  addDebugCubes(cubeColNum: number = 10, cubeRowNum: number = 10, cubeDepthNum: number = 10) {
+    this.setupProp('debugCubeFlg', {type: 'boolean'});
+    const geometry = new THREE.BoxGeometry(5, 5, 5);
+    const material = new THREE.MeshNormalMaterial();
+    for (let i = 0; i < cubeColNum; i++) {
+      for (let j = 0; j < cubeRowNum; j++) {
+        for (let k = 0; k < cubeDepthNum; k++) {
+          const cube = new THREE.Mesh(geometry, material);
+          cube.scale.set(10,10,10);
+          cube.position.set(i * 200 - 1000, j * 200 - 1000, k * 200 - 1000);
+          this.scene.add(cube);
+          this.debugCubes.push(cube);
+        }
+      }
+    }
+    this.debugCubes.forEach((cube) => {
+      cube.visible = this.debugCubeFlg;
+    });
   }
   addPostEffect() {
     const renderPass = new RenderPass(this.scene, this.camera);
     this.effect = new EffectComposer(this.renderer);
-    const bokehPass = new BokehPass(this.scene, this.camera, {
-      focus: 1000,
-      aperture: .02,
-      maxblur: 0.01,
-      aspect: window.innerWidth / window.innerHeight
-    });
   
     this.effect.addPass(renderPass);
-    this.effect.addPass(bokehPass);
+    // this.bokehPassParams = {
+    //   focus: 100,
+    //   aperture: 0.005,
+    //   maxblur: 0.01,
+    //   aspect: window.innerWidth / window.innerHeight
+    // };
+    this.focus = 934
+    this.aperture = .0001
+    this.maxblur = 0.0025
+    console.log(this.bokehPassParams)
+    this.bokehPass = new BokehPass(this.scene, this.camera, {
+      focus: this.focus,  // カメラの位置に合わせて調整
+      aperture: this.aperture,
+      maxblur: this.maxblur,
+      aspect: window.innerWidth / window.innerHeight
+    });
+
+    console.log(this.bokehPass)
+    this.setupProp('focus', {min: 0, max: 2000});
+    this.setupProp('aperture', {min: 0, max: .010000,
+      format: (v) => v.toFixed(4),
+    });
+    this.setupProp('maxblur', {min: 0, max: 0.02});
+    
+    this.effect.addPass(this.bokehPass);
     this.effect.render();
   }
   addCamera() {
-    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+    this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
     this.camera.position.set(0, 0, 1000);  // カメラの位置を少し後ろに下げる
     this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();
@@ -107,7 +169,7 @@ class MyScene {
   }
   
   addLight() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
     this.scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     directionalLight.position.set(1, 1, 1);
@@ -117,7 +179,7 @@ class MyScene {
   render() {
     const time = new Date().getTime() - this.startTime;
     this.controls.update();
-    this.marchingCubes2.render(time);
+    this.marchingCubes.update(time);
     this.renderer.render(this.scene, this.camera);
     // this.effect.render();
   }

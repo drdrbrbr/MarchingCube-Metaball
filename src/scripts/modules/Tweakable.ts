@@ -13,12 +13,15 @@ export class Tweakable {
     this.folder = this.pane.addFolder({ title: this.constructor.name });
   }
   
-  public setupProp(key:string,bindingParams?:any) {
+  public setupProp(key:string,bindingParams?:any,changeCallback?:()=>void) {
     const properties = this.getTweakableProperties();
-    console.log(properties)
+    // console.log(properties)
     const binding = this.folder.addBinding(this, key as keyof this, bindingParams);
     binding.on('change', (ev) => {
       this.change()
+      if (changeCallback) {
+        changeCallback()
+      }
     });
   }
 
@@ -30,7 +33,7 @@ export class Tweakable {
     const properties: TweakableProperty = {};
     
     for (const key in this) {
-      console.log(key)
+      // console.log(key)
       if (this.hasOwnProperty(key)) {
         properties[key] = (this as any)[key];
       }

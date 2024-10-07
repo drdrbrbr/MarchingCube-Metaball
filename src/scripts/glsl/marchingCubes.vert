@@ -16,6 +16,12 @@ uniform mat3 normalMatrix;
 uniform mat4 projectionMatrix;
 uniform vec3 cameraPosition;
 uniform vec4 randomValues[NUM_SPHERES];
+uniform float sphereInnerMoveRange;
+uniform float sphereOuterMoveRange;
+uniform float sphereInnerRadius;
+uniform float sphereOuterRadius;
+uniform float sphereSpeed;
+uniform int numInnerSphere;
 
 varying vec3 vPos;
 varying vec3 vNormal;
@@ -43,9 +49,31 @@ float sphere(vec3 p, float r) {
 
 // メタボールをランダムに動かす
 float randomObj(vec3 p, int i, vec4 randomValues) {
-  float t = mod(time * 0.002 * (0.2 + randomValues.w) + randomValues.z * 100.0, PI2);
-  vec3 translate = (randomValues.xyz * 2.0 - 1.0) * 20.0 * sin(t);
-  float r = 6.0 + randomValues.x * 6.0;
+  float num = float(i);
+
+  // 球体の中心位置を計算
+  vec3 sphereCenter = (randomValues.xyz * 2.0 - 1.0) * 10.0 * num;
+
+  // 球体の中心からの距離を計算
+  float distanceFromCenter = length(sphereCenter);
+
+  // 距離に基づいて速度を計算（中心が1.0、最も遠い位置が0.2）
+  float speed = mix(sphereSpeed, 0.1, distanceFromCenter / 1000.0);
+
+  float t = mod(time * sphereSpeed * (0.2 + randomValues.w) + randomValues.z * 100.0, PI2);
+  // 1つ目の球体は内側を動かし、それ以外は外側を動かす
+  float movementRange = (i < numInnerSphere) ? sphereInnerMoveRange : sphereOuterMoveRange;
+
+  // z軸の動きを減らす
+  vec3 movement = vec3(randomValues.x * 2.0 - 1.0, randomValues.y * 2.0 - 1.0, (randomValues.z * 2.0 - 1.0) * 0.2  // z軸の動きを20%に減らす
+  );
+
+  vec3 translate = movement * movementRange * sin(t);
+  // float r = sphereMinRadius + randomValues.x * (sphereMaxRadius - sphereMinRadius);
+
+  // 中心の球体（インデックス0）だけ小さくする
+  float r = (i < numInnerSphere) ? sphereInnerRadius : sphereOuterRadius;
+
   float l = cellSize.x;
   p -= translate;
   return sphere(p, r);
