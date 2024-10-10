@@ -22,6 +22,7 @@ uniform float sphereInnerRadius;
 uniform float sphereOuterRadius;
 uniform float sphereSpeed;
 uniform int numInnerSphere;
+uniform float sphereOuterPos;
 
 varying vec3 vPos;
 varying vec3 vNormal;
@@ -44,12 +45,15 @@ const vec3 AXIS_Z = vec3(0.0, 0.0, 1.0);
 
 // 球の距離関数
 float sphere(vec3 p, float r) {
-  return length(p) - r;
+  float d = length(p) - r;
+  return d * 0.6; // 影響範囲を広げる
 }
 
 // メタボールをランダムに動かす
 float randomObj(vec3 p, int i, vec4 randomValues) {
+  float num_spheres = float(NUM_SPHERES);
   float num = float(i);
+  float num_inner = float(numInnerSphere);
 
   // 球体の中心位置を計算
   vec3 sphereCenter = (randomValues.xyz * 2.0 - 1.0) * 10.0 * num;
@@ -65,10 +69,23 @@ float randomObj(vec3 p, int i, vec4 randomValues) {
   float movementRange = (i < numInnerSphere) ? sphereInnerMoveRange : sphereOuterMoveRange;
 
   // z軸の動きを減らす
-  vec3 movement = vec3(randomValues.x * 2.0 - 1.0, randomValues.y * 2.0 - 1.0, (randomValues.z * 2.0 - 1.0) * 0.2  // z軸の動きを20%に減らす
+  vec3 movement = vec3(randomValues.x * 2.0 - 1.0, randomValues.y * 2.0 - 1.0, (randomValues.z * 2.0 - 1.0) * 0.4  // z軸の動きを20%に減らす
   );
 
-  vec3 translate = movement * movementRange * sin(t);
+  vec3 movementCorrection;
+  if(num < num_inner) {
+    movementCorrection = vec3(0.0, 0.0, 0.0);
+  } else if(num_inner <= num && num < num_spheres / 4.0) {
+    movementCorrection = vec3(sphereOuterPos + 5.0 * (num - num_inner), 0.0, 0.0);
+  } else if(num_spheres / 4.0 <= num && num < num_spheres * 2.0 / 4.0) {
+    movementCorrection = vec3(0.0, sphereOuterPos + 5.0 * (num - num_spheres / 4.0), 0.0);
+  } else if(num_spheres * 2.0 / 4.0 <= num && num < num_spheres * 3.0 / 4.0) {
+    movementCorrection = vec3(-sphereOuterPos - 5.0 * (num - num_spheres * 2.0 / 4.0), 0.0, 0.0);
+  } else if(num_spheres * 3.0 / 4.0 <= num) {
+    movementCorrection = vec3(0.0, -sphereOuterPos - 5.0 * (num - num_spheres * 3.0 / 4.0), 0.0);
+  }
+  vec3 translate = movement * movementRange * sin(t) + movementCorrection;
+
   // float r = sphereMinRadius + randomValues.x * (sphereMaxRadius - sphereMinRadius);
 
   // 中心の球体（インデックス0）だけ小さくする
@@ -82,25 +99,22 @@ float randomObj(vec3 p, int i, vec4 randomValues) {
 // Smooth Union
 float opSmoothUnion(float d1, float d2, float k) {
   float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
-  return mix(d2, d1, h) - k * h * (1.0 - h);
+  return mix(d2, d1, h) - k * h * (1.0 - h) * 0.9;
 }
 
 // 最終的な距離関数
 float getDistance(vec3 p) {
   // 適当に回転
-  // float theta = mod(time * 0.001, PI2);
+  // float theta = mod(time * 0.0001, PI2);
   // p = rotateVec3(p, theta, AXIS_Z);
   // p = rotateVec3(p, theta, AXIS_X);
 
-  float result = 0.0;
+  float result = 20000.0; // 大きな初期値
   float d;
   for(int i = 0; i < NUM_SPHERES; i++) {
     d = randomObj(p, i, randomValues[i]);
-    if(result == 0.0)
-      result = d;
     result = opSmoothUnion(result, d, smoothUnionValue);
   }
-
   return result;
 }
 

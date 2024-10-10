@@ -20,7 +20,7 @@ void main(void) {
     vec3 light = normalize(LIGHT_DIR);
     vec3 eye = normalize(cameraPosition - vPos);
     vec3 halfLE = normalize(light + eye);
-    float diffuse = clamp(dot(n, light), 0.95, 1.0);
+    float diffuse = clamp(dot(n, light), 0.97, 1.0);
     // float specular = pow(clamp(dot(n, halfLE), 0.0, .3), 50.0);
     vec3 color = sphereColor * diffuse;
     gl_FragColor = vec4(color, 1.0);

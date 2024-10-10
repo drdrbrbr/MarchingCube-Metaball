@@ -37,6 +37,9 @@ export class MarchingCubes extends Tweakable {
   private sphereOuterRadius: number;
   private sphereSpeed: number;
   private allRotationSpeed: number;
+  private spherePositions: THREE.Vector3[];
+  private sphereOuterPos: number;
+
   constructor(renderer: THREE.WebGLRenderer, scene:THREE.Scene, camera: THREE.Camera) {
     super()
     console.log(this)
@@ -51,15 +54,16 @@ export class MarchingCubes extends Tweakable {
 
     this.numMarchingSegments = 80;  // セルの分割数
     this.margingSpaceSize = 128;     // マーチングキューブのスペースのサイズ
-    this.numSpheres = 6;            // メタボールの数
-    this.numInnerSphere = 2;
-    this.smoothUnionValue = 20;      // メタボールの結合の度合い
-    this.sphereInnerMoveRange = 25;
-    this.sphereOuterMoveRange = 40;
-    this.sphereInnerRadius = 8.5;
-    this.sphereOuterRadius = 12.5;
-    this.sphereSpeed = 0.0016;
+    this.numSpheres = 5;            // メタボールの数
+    this.numInnerSphere = 1;
+    this.smoothUnionValue = 11;      // メタボールの結合の度合い
+    this.sphereInnerMoveRange = 10;
+    this.sphereOuterMoveRange = 15;
+    this.sphereInnerRadius = 17;
+    this.sphereOuterRadius = 15;
+    this.sphereSpeed = 0.003;
     this.sphereColor = {r: 20, g: 140, b: 20};  // メタボールの色
+    this.sphereOuterPos = 25.0;
     // geometry
     this.geometry = new THREE.BufferGeometry();
 
@@ -67,7 +71,10 @@ export class MarchingCubes extends Tweakable {
     console.log(this.effectValue)
     this.isWireframe = false;
 
-    this.allRotationSpeed = 0.002;
+    this.allRotationSpeed = 0.001;
+
+    this.spherePositions = [];
+    this.initSpherePositions();
 
     this.material = new THREE.RawShaderMaterial({
       // wireframe: true,
@@ -88,6 +95,7 @@ export class MarchingCubes extends Tweakable {
         sphereOuterMoveRange: { value: this.sphereOuterMoveRange },
         sphereInnerRadius: { value: this.sphereInnerRadius },
         sphereOuterRadius: { value: this.sphereOuterRadius },
+        sphereOuterPos: { value: this.sphereOuterPos },
         sphereSpeed: { value: this.sphereSpeed },
         numInnerSphere: { value: this.numInnerSphere },
       }
@@ -114,6 +122,7 @@ export class MarchingCubes extends Tweakable {
     this.setupProp('sphereOuterMoveRange', {label: "外球の移動範囲", min: 0, max: 100, step: .1})
     this.setupProp('sphereInnerRadius', {label: "内球の半径", min: 0, max: 20, step: .1})
     this.setupProp('sphereOuterRadius', {label: "外球の半径", min: 0, max: 20, step: .1})
+    this.setupProp('sphereOuterPos', {label: "外球の基準位置", min: 0, max: 100, step: .1})
     this.setupProp('sphereSpeed', {label: "球の速度", min: 0, max: 0.01, step: .0001})
     this.setupProp('allRotationSpeed', {label: "全体の回転速度", min: 0, max: 0.01, step: .0001})
     this.setupProp('sphereColor', {label: "球の色"})
@@ -130,6 +139,7 @@ export class MarchingCubes extends Tweakable {
     this.material.uniforms.sphereOuterMoveRange.value = this.sphereOuterMoveRange;
     this.material.uniforms.sphereInnerRadius.value = this.sphereInnerRadius;
     this.material.uniforms.sphereOuterRadius.value = this.sphereOuterRadius;
+    this.material.uniforms.sphereOuterPos.value = this.sphereOuterPos;
     this.material.uniforms.sphereSpeed.value = this.sphereSpeed;
     this.material.uniforms.numInnerSphere.value = this.numInnerSphere;
   }
@@ -166,6 +176,7 @@ export class MarchingCubes extends Tweakable {
 
   private updateNumSpheres() {
     const randomValues = [];
+    const positions = [];
     for (let i = 0; i < this.numSpheres; i++) {
       randomValues.push(new THREE.Vector4(
         Math.random(),
@@ -173,18 +184,39 @@ export class MarchingCubes extends Tweakable {
         Math.random(),
         Math.random()
       ));
+      // const position = this.spherePositions[i] || new THREE.Vector3();
+      // positions.push(new THREE.Vector4(
+      //   position.x,
+      //   position.y,
+      //   position.z,
+      //   1.0  // w成分は1.0に設定
+      // ));
     }
     this.material.defines.NUM_SPHERES = this.numSpheres;
     this.material.uniforms.randomValues.value = randomValues;
+    // this.material.uniforms.randomValues.value = positions;
     this.material.needsUpdate = true;
   }
 
   update(time: number) {
     this.mesh.rotation.z += this.allRotationSpeed;
+    this.mesh.rotation.y += this.allRotationSpeed*.5;
     this.material.uniforms.time.value = time/3;
 
     // // メッシュの位置とスケールを調整
     // this.mesh.position.set(0, 0, 0);  // 原点に配置
     // this.mesh.scale.setScalar(1);  // スケールを1に設定
+  }
+
+  private initSpherePositions() {
+    // 固定位置を設定
+    this.spherePositions = [
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-0.9, -0.7, 0),
+      new THREE.Vector3(-0.9, -0.5, 0),
+      new THREE.Vector3(-0.7, 0.8, 0),
+      new THREE.Vector3(0.5, 0.1, 0.3),
+      new THREE.Vector3(0.2, 0.5, 0.3)
+    ];
   }
 }

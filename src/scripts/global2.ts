@@ -8,45 +8,6 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { BokehPass, type BokehPassParamters } from 'three/addons/postprocessing/BokehPass.js';
 
-class MyObject extends Tweakable {
-  public position: { x: number; y: number };
-  public size: number;
-  public color: string;
-  private div!: HTMLDivElement;
-  
-  constructor() {
-    super();
-    this.position = { x: 0, y: 0 };
-    this.size = 10;
-    this.color = '#ff0000';
-    this.setupProp('position',{
-      x: {min: 0, max: 500},
-      y: {min: 0, max: 500},
-    });
-    this.setupProp('size');
-    this.setupProp('color');
-    this.addHtml()
-  }
-
-  private addHtml() {
-    this.div = document.createElement('div');
-    this.updateHtml()
-    document.body.appendChild(this.div);
-  }
-  private updateHtml() {
-    this.div.style.width = `${this.size}px`;
-    this.div.style.height = `${this.size}px`;
-    this.div.style.backgroundColor = this.color;
-    this.div.style.position = 'absolute';
-    this.div.style.top = `${this.position.y}px`;
-    this.div.style.left = `${this.position.x}px`;
-  }
-  change() {
-    super.change()
-    this.updateHtml()
-  }
-}
-
 class MyScene extends Tweakable{
   private scene: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
